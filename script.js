@@ -50,6 +50,12 @@ const description = document.getElementById('scene-description');
 const directionCopy = document.getElementById('direction-copy');
 const statusModule = document.getElementById('status-module').querySelector('strong');
 
+// Cache scene keys once instead of recomputing on every keypress.
+const sceneKeys = Object.keys(sceneData);
+// Track the active scene key to avoid scanning DOM classes on every keypress.
+// Initialise to the first key so keyboard navigation works correctly from the start.
+let currentSceneKey = sceneKeys[0];
+
 function setScene(sceneKey) {
   const scene = sceneData[sceneKey];
   if (!scene) return;
@@ -67,22 +73,25 @@ function setScene(sceneKey) {
   description.textContent = scene.description;
   directionCopy.innerHTML = scene.direction;
   statusModule.textContent = scene.status;
+
+  currentSceneKey = sceneKey;
 }
 
-tabs.forEach((tab) => {
-  tab.addEventListener('click', () => setScene(tab.dataset.scene));
+// Use a single delegated listener instead of one listener per tab.
+document.querySelector('.scene-selector').addEventListener('click', (event) => {
+  const tab = event.target.closest('.scene-tab');
+  if (tab) setScene(tab.dataset.scene);
 });
 
 window.addEventListener('keydown', (event) => {
-  const keys = Object.keys(sceneData);
-  const currentIndex = keys.findIndex((key) => stage.classList.contains(`stage-${key}`));
+  const currentIndex = sceneKeys.indexOf(currentSceneKey);
 
   if (event.key === 'ArrowRight') {
-    setScene(keys[(currentIndex + 1) % keys.length]);
+    setScene(sceneKeys[(currentIndex + 1) % sceneKeys.length]);
   }
 
   if (event.key === 'ArrowLeft') {
-    setScene(keys[(currentIndex - 1 + keys.length) % keys.length]);
+    setScene(sceneKeys[(currentIndex - 1 + sceneKeys.length) % sceneKeys.length]);
   }
 });
 
